@@ -1,0 +1,14 @@
+# Ignoră mediile virtuale
+venv/
+env/
+.env
+
+# Ignoră baza de date (e prea mare pentru GitHub)
+db_legal/
+
+# Ignoră fișierele de sistem Mac
+.DS_Store
+
+# Ignoră fișierele temporare Python
+__pycache__/
+*.pyc
