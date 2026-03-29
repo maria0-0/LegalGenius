@@ -1,8 +1,8 @@
 streamlit
-crewai==0.83.0
+crewai
 langchain-groq
 langchain-huggingface
-langchain-chroma==0.1.2
+langchain-chroma
 langchain-community
 sentence-transformers
 pypdf
