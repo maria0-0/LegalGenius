@@ -1,8 +1,9 @@
-langchain
-langchain-community
-langchain-huggingface
-langchain-ollama
-chromadb
-pypdf
 streamlit
 crewai
+langchain-groq
+langchain-huggingface
+langchain-chroma
+sentence-transformers
+pypdf
+python-dotenv
+langchain-community

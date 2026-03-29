@@ -1,7 +1,17 @@
 import streamlit as st
 from pypdf import PdfReader
 from legal_crew import  auditeaza_contract_complet, genereaza_contract_favorabil, genereaza_document, repara_clauze_contract
+import os
+from ingest import run_ingestion
 
+if 'audit_efectuat' not in st.session_state:
+    st.session_state['audit_efectuat'] = False
+
+if not os.path.exists("db_legal"):
+    with st.spinner("Se configurează baza de date juridică pentru prima dată..."):
+        run_ingestion()
+
+        
 # 1. Configurare Vizuală
 st.set_page_config(page_title="Legal Genius Pro", page_icon="⚖️", layout="wide")
 

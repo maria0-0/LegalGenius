@@ -1,29 +1,25 @@
 import os
 from crewai import Agent, Task, Crew, Process
-from langchain_ollama import ChatOllama
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
+from dotenv import load_dotenv
 
-# Optimizare viteză
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+load_dotenv()
 
-# 1. Configurare Llama 3.2
-# Reducem temperatura la 0 pentru viteză și predictibilitate
-my_llm = ChatOllama(
-    model="llama3.2", 
-    base_url="http://localhost:11434", 
-    temperature=0, 
-    num_ctx=4096, # 8192 e mult pentru audit rapid, 4096 e "sweet spot"
-    repeat_penalty=1.2,
-    top_p=0.9
-)
+# 1. CONFIGURARE MODEL - Metoda STRING (Cea mai stabilă pentru Deploy)
+# Folosim prefixul groq/ pentru ca CrewAI să știe unde să trimită cererea
+MODEL_CONFIG = "groq/llama-3.3-70b-versatile"
+# IMPORTANT: CrewAI caută automat această variabilă în sistem
+api_key = os.getenv("GROQ_API_KEY")
+if not api_key:
+    raise ValueError("EROARE: GROQ_API_KEY nu a fost găsită!")
+os.environ["GROQ_API_KEY"] = api_key
 
-# 2. Conectare la Biblioteca de Legi
+# 2. CONECTARE LA BAZA DE DATE (RAG)
+# Definim o singură dată pentru tot fișierul
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 db = Chroma(persist_directory="db_legal", embedding_function=embeddings)
-# k=3 este suficient pentru a găsi legile relevante și a rula instantaneu pe local
 retriever = db.as_retriever(search_kwargs={"k": 3})
-
 # ============================================================
 # 3. AGENȚI SPECIALIZAȚI — PROMPTURI ANTI-HALUCINARE EXTREMĂ
 # ============================================================
@@ -38,7 +34,7 @@ expert_legal = Agent(
     2. RESTRICȚIE TEXT: FĂRĂ INTRODUCERI ("Iată analiza", "Sigur!"). Începi DIRECT cu formatul cerut.
     3. ANTI-HALUCINARE: NU INVENTA NUMERE DE ARTICOLE (Ex: Art. 999). Dacă nu apare în textul legislativ, spui "conform legislației" sau citezi doar extrasul legal oferit.
     4. STRICT: Bazează-te STRICT pe contextul legislativ oferit. Ce nu e în context, tratează cu maximă precauție.""",
-    llm=my_llm,
+    llm=MODEL_CONFIG,
     verbose=True,
     allow_delegation=False,
     max_iter=3,
@@ -55,7 +51,7 @@ avocat_aparator = Agent(
     2. RESTRICȚIE TEXT: FĂRĂ BLA-BLA ("Mai jos sunt riscurile..."). Furnizezi DIRECT forma finală analitică.
     3. ANTI-HALUCINARE: Analizează DOAR textul existent în contract, nu inventa clauze care nu există acolo.
     4. TON: Clar, direct, explicat la obiect.""",
-    llm=my_llm,
+    llm=MODEL_CONFIG,
     verbose=True,
     allow_delegation=False,
     max_iter=3,
@@ -72,7 +68,7 @@ redactor_juridic = Agent(
     2. RESTRICȚIE TEXT: AFIȘEAZĂ DOAR TEXTUL DOCUMETULUI. Fără "Acesta este contractul:", "Am terminat...".
     3. ANTI-HALUCINARE: Când introduci drepturi, folosește doar drepturi aplicabile în România, nu inventa concepte străine.
     4. FORMAT: Folosește o structură de PĂRȚI, OBIECT, DREPTURI, OBLIGAȚII, art.1, art.2.""",
-    llm=my_llm,
+    llm=MODEL_CONFIG,
     allow_delegation=False,
     verbose=True,
     max_iter=3,
@@ -88,7 +84,7 @@ avocat_redactor = Agent(
     1. LIMBA: RĂSPUNZI DOAR ÎN LIMBA ROMÂNĂ.
     2. RESTRICȚIE TEXT: Fără cuvinte de introducere. Doar o listă structurată cu corecturile.
     3. Fără adăugiri superflue. Rescrie strict respectând spiritul comercial dar în legalitate absolută.""",
-    llm=my_llm,
+    llm=MODEL_CONFIG,
     allow_delegation=False,
     verbose=True,
     max_iter=3,
@@ -104,7 +100,7 @@ arhitect_contracte = Agent(
     1. LIMBA: RĂSPUNZI DOAR ÎN LIMBA ROMÂNĂ.
     2. RESTRICȚIE TEXT: Răspunde DIRECT prin textul documentului refăcut, urmat de tabel. NICIUN alt comentariu ("Aici aveți contractul...").
     3. Fii curajos dar legal: minimizează durata preavizului pentru plecare, maximează concediul.""",
-    llm=my_llm,
+    llm=MODEL_CONFIG,
     allow_delegation=False,
     verbose=True,
     max_iter=3,
