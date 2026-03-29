@@ -22,8 +22,8 @@ def run_ingestion():
     print("⏳ Pasul 2: Tăiem textul în fragmente (Chunks)...")
     # Folosim Recursive pentru a nu tăia frazele juridice la jumătate
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, 
-        chunk_overlap=150,
+        chunk_size=1500, 
+        chunk_overlap=200,
         separators=["\n\n", "\n", ".", " ", ""]
     )
     chunks = splitter.split_documents(documents)
